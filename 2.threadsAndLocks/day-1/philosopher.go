@@ -22,12 +22,19 @@ func (p *philosopher) run() {
 	for {
 		// think a while
 		fmt.Println("thinking", p.number)
-		time.Sleep(time.Duration(rand.Int63n(int64(p.thinkTime))) * time.Millisecond)
+		duration := time.Duration(0)
+		if p.thinkTime > 0 {
+			duration = time.Duration(rand.Int63n(int64(p.thinkTime)))
+		}
+		time.Sleep(duration * time.Millisecond)
 		p.first.Lock()
 		p.second.Lock()
 		// eat a while
 		fmt.Println("eating", p.number)
-		time.Sleep(time.Duration(rand.Int63n(int64(p.eatTime))) * time.Millisecond)
+		if p.eatTime > 0 {
+			duration = time.Duration(rand.Int63n(int64(p.eatTime)))
+		}
+		time.Sleep(duration * time.Millisecond)
 		p.second.Unlock()
 		p.first.Unlock()
 	}
