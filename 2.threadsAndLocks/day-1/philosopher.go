@@ -58,13 +58,25 @@ func main() {
 
 	philosophers := make([]philosopher, numOfPhilosophers)
 	for i := 0; i < numOfPhilosophers; i++ {
-		philosophers[i] = philosopher{
-			number:    i,
-			first:     &chopsticks[i%numOfChopsticks],
-			second:    &chopsticks[(i+1)%numOfChopsticks],
-			thinkTime: think,
-			eatTime:   eat,
+		philosopherGetter := func() philosopher {
+			if i%2 == 0 {
+				return philosopher{
+					number:    i,
+					first:     &chopsticks[i%numOfChopsticks],
+					second:    &chopsticks[(i+1)%numOfChopsticks],
+					thinkTime: think,
+					eatTime:   eat,
+				}
+			}
+			return philosopher{
+				number:    i,
+				first:     &chopsticks[(i+1)%numOfChopsticks],
+				second:    &chopsticks[i%numOfChopsticks],
+				thinkTime: think,
+				eatTime:   eat,
+			}
 		}
+		philosophers[i] = philosopherGetter()
 		go philosophers[i].run()
 	}
 	select {}
