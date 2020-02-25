@@ -28,7 +28,48 @@ func (list *concurrentSortedList) toList() []int {
 }
 
 func (list *concurrentSortedList) insertH2H(v int) {
-
+	newNode := &concurrentNode{
+		value: v,
+		prev:  nil,
+		next:  nil,
+	}
+	list.lock.Lock()
+	if list.head == nil {
+		list.head = newNode
+		list.lock.Unlock()
+		return
+	}
+	list.lock.Unlock()
+	current := &list.head
+	for true {
+		(*current).lock.Lock()
+		if v < (*current).value {
+			// head
+			if (*current).prev == nil {
+				newNode.next = (*current)
+				(*current).lock.Unlock()
+				(*current) = newNode
+			} else {
+				(*current).prev.lock.Lock()
+				(*current).prev.next = newNode
+				(*current).prev.lock.Unlock()
+				(*current).lock.Unlock()
+			}
+			break
+		}
+		if nil == (*current).next {
+			(*current).lock.Unlock()
+			break
+		}
+		(*current).lock.Unlock()
+		current = &(*current).next
+	}
+	if newNode.prev == nil && newNode.next == nil {
+		(*current).lock.Lock()
+		newNode.prev = *current
+		(*current).next = newNode
+		(*current).lock.Unlock()
+	}
 }
 
 func (list *concurrentSortedList) insert1Lock(v int) {
