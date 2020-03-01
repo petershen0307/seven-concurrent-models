@@ -2,7 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"math/rand"
 	"sync"
+	"time"
 )
 
 type concurrentNode struct {
@@ -112,4 +115,34 @@ func main() {
 	var listSize int
 	flag.IntVar(&listSize, "s", 1000, "give a size for list")
 	flag.Parse()
+	sample := make([]int, listSize)
+	randGen := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := 0; i < listSize; i++ {
+		sample[0] = randGen.Int()
+	}
+	sample2 := make([]int, listSize)
+	copy(sample2, sample)
+	var wg sync.WaitGroup
+	wg.Add(2)
+	sample1Lock := concurrentSortedList{}
+	go func() {
+		defer wg.Done()
+		startTime := time.Now()
+		fmt.Println("1 lock start:", startTime)
+		for _, v := range sample {
+			sample1Lock.insert1Lock(v)
+		}
+		fmt.Println("1 lock elapse:", time.Now().Sub(startTime))
+	}()
+	sampleH2HLock := concurrentSortedList{}
+	go func() {
+		defer wg.Done()
+		startTime := time.Now()
+		fmt.Println("H2H lock start:", startTime)
+		for _, v := range sample {
+			sampleH2HLock.insertH2H(v)
+		}
+		fmt.Println("H2H lock elapse:", time.Now().Sub(startTime))
+	}()
+	wg.Wait()
 }
